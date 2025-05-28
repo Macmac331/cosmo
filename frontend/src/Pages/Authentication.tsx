@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { GoogleLogin } from "@react-oauth/google";
 import { jwtDecode } from "jwt-decode";
 import { useNavigate } from "react-router-dom";
@@ -15,8 +15,15 @@ interface DecodedGoogleToken {
   picture?: string;
 }
 
+interface User {
+  email: string;
+  firstName?: string;
+  lastName?: string;
+}
+
 const Authentication: React.FC<AuthenticationProps> = ({ isOpen }) => {
   const navigate = useNavigate();
+  const [user, setUser] = useState<User | null>(null);
   if (!isOpen) return null;
 
   return (
@@ -26,13 +33,21 @@ const Authentication: React.FC<AuthenticationProps> = ({ isOpen }) => {
 
         <div className="space-y-4">
           <GoogleLogin
+            text="Sign in with Google"
+            logo_alignment="left"
+            shape="rectangular"
             onSuccess={(credentialResponse) => {
               if (credentialResponse.credential) {
                 const decodedToken = jwtDecode<DecodedGoogleToken>(
                   credentialResponse.credential
                 );
                 console.log("Login Successful", decodedToken);
-
+                const userData: User = {
+                  email: decodedToken.email,
+                  firstName: decodedToken.given_name,
+                  lastName: decodedToken.family_name,
+                };
+                setUser(userData);
                 navigate("/chat");
               }
             }}
